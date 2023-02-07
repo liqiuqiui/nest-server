@@ -12,6 +12,9 @@ import { UploadModule } from './modules/upload/upload.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import wxConfig from './common/config/weixin-config';
 import * as Joi from 'joi';
+import { AppService } from './app.service';
+import { User } from './modules/user/entities/user.entity';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -42,6 +45,7 @@ import * as Joi from 'joi';
       logging: true,
       timezone: '+08:00',
     }),
+    TypeOrmModule.forFeature([User]),
     UserModule,
     OrderModule,
     NoticeModule,
@@ -50,5 +54,7 @@ import * as Joi from 'joi';
     UploadModule,
     FeedbackModule,
   ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

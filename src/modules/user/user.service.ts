@@ -3,8 +3,6 @@ import {
   Inject,
   Injectable,
   NotFoundException,
-  OnApplicationBootstrap,
-  OnModuleInit,
 } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -21,11 +19,10 @@ import { UserLoginDto } from './dto/user-login.dto';
 import { SwitchRoleDto } from './dto/switch-role.dto';
 import { AuthService } from '../auth/auth.service';
 import { Role } from '@/common/enum/role.enum';
-import { Logger } from '@/common/utils/logger';
 import { AdminLoginDto } from './dto/admin-login.dto';
 
 @Injectable()
-export class UserService implements OnApplicationBootstrap, OnModuleInit {
+export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -36,29 +33,6 @@ export class UserService implements OnApplicationBootstrap, OnModuleInit {
     private readonly wxConfig: ConfigType<typeof weixinConfig>,
     private readonly authService: AuthService,
   ) {}
-  onModuleInit() {
-    this.logger.log('user模块初始化成功');
-  }
-  private readonly logger = new Logger(UserService.name);
-
-  // nest生命周期函数，应用启动的时候创建默认的管理员账户
-  async onApplicationBootstrap() {
-    console.log('userservice 生命周期函数');
-
-    const res = await this.userRepository.countBy({ role: Role.Admin });
-    if (res === 0) {
-      const admin = this.userRepository.create({
-        username: 'admin',
-        password: '123456',
-        role: Role.Admin,
-      });
-
-      this.userRepository.save(admin);
-      this.logger.log('admin账户初始化成功');
-    } else {
-      this.logger.log('admin账户已存在');
-    }
-  }
 
   async findAll(paginationQueryDto: PaginationQueryDto) {
     const { page, pageSize } = paginationQueryDto;

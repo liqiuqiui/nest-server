@@ -21,6 +21,7 @@ module.exports = {
       'warn',
       {
         arrowParens: 'avoid',
+        endOfLine: 'crlf',
       },
     ],
     '@typescript-eslint/interface-name-prefix': 'off',
