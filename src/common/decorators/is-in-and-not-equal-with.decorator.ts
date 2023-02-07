@@ -42,9 +42,6 @@ export function IsInAndNotEqualWith(
             !['string', 'number', 'array', 'object'].includes(condition.type)
           )
             return false;
-          // else if (condition.type === 'array' && value instanceof Array) {
-          //   return false;
-          // } else return false;
 
           return (
             condition.in.includes(value) &&

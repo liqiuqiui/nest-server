@@ -10,8 +10,6 @@ import { Image } from '../../common/entities/image.entity';
 import { Order } from './entities/order.entity';
 import { Request } from 'express';
 import { Role } from '@/common/enum/role.enum';
-import { Repairman } from '../repairman/entities/repairman.entity';
-import { Admin } from '../admin/entities/admin.entity';
 import { OrderState } from '@/common/constants/order.constant';
 import { ProcessOrderDto } from './dto/process-order.dto';
 import { QueryOrderDto } from './dto/query-order.dto';
@@ -28,10 +26,8 @@ export class OrderService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Image)
     private readonly imageRepository: Repository<Image>,
-    @InjectRepository(Repairman)
-    private readonly repairmanRepository: Repository<Repairman>,
     @Inject(REQUEST)
-    private readonly req: Request & { user: User & Admin },
+    private readonly req: Request & { user: User },
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
@@ -58,108 +54,45 @@ export class OrderService {
     const { page, pageSize, name, orderState } = queryOrderDto;
     let list: Order[] = [],
       totalCount: number = 0;
-    const user = this.req.user as User | Repairman | Admin;
+    const user = this.req.user as User;
+    const builder = this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect(
+        'order.faultImages',
+        'faultImages',
+        'faultImages.type = :faultType',
+        { faultType: ImageType.Fault },
+      )
+      .leftJoinAndSelect(
+        'order.finishImages',
+        'finishImages',
+        'finishImages.type = :finishType',
+        { finishType: ImageType.Finish },
+      )
+      .leftJoinAndSelect('order.repairman', 'repairman')
+      .leftJoinAndSelect('order.user', 'user');
 
-    switch (user.role) {
-      // 管理员查询所有订单
-      case Role.Admin:
-        {
-          const builder = this.orderRepository
-            .createQueryBuilder('order')
-            .leftJoinAndSelect(
-              'order.faultImages',
-              'faultImages',
-              'faultImages.type = :faultType',
-              { faultType: ImageType.Fault },
-            )
-            .leftJoinAndSelect(
-              'order.finishImages',
-              'finishImages',
-              'finishImages.type = :finishType',
-              { finishType: ImageType.Finish },
-            )
-            .leftJoinAndSelect('order.repairman', 'repairman')
-            .leftJoinAndSelect('order.user', 'user');
-
-          if (name)
-            builder.andWhere('user.name like :name', { name: `%${name}%` });
-          if (typeof orderState === 'number')
-            builder.andWhere('order.state=:orderState', { orderState });
-
-          [list = [], totalCount = 0] = await builder
-            .orderBy('order.id', 'DESC')
-            .skip(pageSize * (page - 1))
-            .take(pageSize)
-            .printSql()
-            .getManyAndCount();
-        }
-        break;
-      // 用户查询自己的订单
-      case Role.User:
-        {
-          const builder = this.orderRepository
-            .createQueryBuilder('order')
-            .leftJoinAndSelect(
-              'order.faultImages',
-              'faultImages',
-              'faultImages.type = :faultType',
-              { faultType: ImageType.Fault },
-            )
-            .leftJoinAndSelect(
-              'order.finishImages',
-              'finishImages',
-              'finishImages.type = :finishType',
-              { finishType: ImageType.Finish },
-            )
-            .leftJoinAndSelect('order.repairman', 'repairman')
-            .where('order.userId = :userId', { userId: user.id });
-
-          if (typeof orderState === 'number')
-            builder.andWhere('order.state=:orderState', { orderState });
-
-          [list = [], totalCount = 0] = await builder
-            .orderBy('order.id', 'DESC')
-            .skip(pageSize * (page - 1))
-            .take(pageSize)
-            .printSql()
-            .getManyAndCount();
-        }
-        break;
-      // 维修工查询自己的订单
-      case Role.Repairman:
-        {
-          [list = [], totalCount = 0] = await this.orderRepository
-            .createQueryBuilder('order')
-            .leftJoinAndSelect(
-              'order.faultImages',
-              'faultImages',
-              'faultImages.type = :faultType',
-              { faultType: ImageType.Fault },
-            )
-            .leftJoinAndSelect(
-              'order.finishImages',
-              'finishImages',
-              'finishImages.type = :finishType',
-              { finishType: ImageType.Finish },
-            )
-            .leftJoinAndSelect('order.repairman', 'repairman')
-            .where('order.repairmanId = :repairmanId', {
-              repairmanId: this.req.user.id,
-            })
-            .andWhere('order.state in (:...orderState)', {
-              orderState: [OrderState.assigned, OrderState.finish],
-            })
-            .orderBy('order.id', 'DESC')
-            .skip(pageSize * (page - 1))
-            .take(pageSize)
-            .printSql()
-            .getManyAndCount();
-        }
-        break;
-
-      default:
-        break;
+    if (user.role === Role.User) {
+      builder.andWhere('order.userId = :userId', { userId: user.id });
     }
+
+    if (user.role === Role.Repairman) {
+      builder.andWhere('order.repairmanId = :repairmanId', {
+        repairmanId: user.id,
+      });
+    }
+
+    if (name) builder.andWhere('user.name like :name', { name: `%${name}%` });
+
+    if (typeof orderState === 'number')
+      builder.andWhere('order.state=:orderState', { orderState });
+
+    [list = [], totalCount = 0] = await builder
+      .orderBy('order.id', 'DESC')
+      .skip(pageSize * (page - 1))
+      .take(pageSize)
+      .printSql()
+      .getManyAndCount();
 
     const totalPage = Math.ceil(totalCount / pageSize) ?? 0;
 
@@ -248,16 +181,22 @@ export class OrderService {
   }
 
   async assign(id: number, assignOrderDto: AssignOrderDto) {
-    const repairman = await this.preloadRepairmanById(
-      assignOrderDto.repairmanId,
-    );
+    const { repairmanId } = assignOrderDto;
+    const repairman = await this.userRepository.findOneBy({
+      id: repairmanId,
+    });
+
+    if (!repairman)
+      throw new NotFoundException(`repairman id=${repairmanId} not found`);
 
     const order = await this.orderRepository.findOneBy({
       id,
       state: OrderState.pass,
     });
+
     if (!order)
       throw new NotFoundException(`to be assigned order #id=${id} not found`);
+
     return this.orderRepository.save({
       ...order,
       repairman,
@@ -311,11 +250,5 @@ export class OrderService {
     const existImg = await this.imageRepository.findOneBy({ url, type });
     if (existImg) return existImg;
     return this.imageRepository.create({ url, type });
-  }
-
-  private async preloadRepairmanById(id: number) {
-    const existImg = await this.repairmanRepository.findOneBy({ id });
-    if (!existImg) throw new NotFoundException(`repairman #id=${id} not found`);
-    return existImg;
   }
 }

@@ -4,7 +4,7 @@ import { Image } from '@/common/entities/image.entity';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Admin, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { ProcessFeedbackDto } from './dto/procecc-feedback.dto';
@@ -19,7 +19,7 @@ export class FeedbackService {
     @InjectRepository(Image)
     private readonly imageRepository: Repository<Image>,
     @Inject(REQUEST)
-    private readonly req: Request & { user: User & Admin },
+    private readonly req: Request & { user: User },
   ) {}
   async create(createFeedbackDto: CreateFeedbackDto) {
     const images =

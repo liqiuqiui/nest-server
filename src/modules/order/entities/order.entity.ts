@@ -1,6 +1,5 @@
 import { Base } from '@/common/entities/base.entity';
 import { Image } from '@/common/entities/image.entity';
-import { Repairman } from '@/modules/repairman/entities/repairman.entity';
 import { User } from '@/modules/user/entities/user.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Column, Entity, Generated, ManyToOne, OneToMany } from 'typeorm';
@@ -60,10 +59,10 @@ export class Order extends Base {
   finishImages: Image[];
 
   @ApiPropertyOptional()
-  @ManyToOne(() => Repairman, repairman => repairman.orders, {
+  @ManyToOne(() => User, user => user.orders, {
     createForeignKeyConstraints: false,
   })
-  repairman: Repairman;
+  repairman: User | null;
 
   @ApiPropertyOptional()
   @ManyToOne(() => User, user => user.orders, {

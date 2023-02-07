@@ -6,9 +6,7 @@ import { OrderModule } from './modules/order/order.module';
 import { UserModule } from './modules/user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { NoticeModule } from './modules/notice/notice.module';
-import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { RepairmanModule } from './modules/repairman/repairman.module';
 import { AddressModule } from './modules/address/address.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
@@ -47,9 +45,7 @@ import * as Joi from 'joi';
     UserModule,
     OrderModule,
     NoticeModule,
-    AdminModule,
     AuthModule,
-    RepairmanModule,
     AddressModule,
     UploadModule,
     FeedbackModule,

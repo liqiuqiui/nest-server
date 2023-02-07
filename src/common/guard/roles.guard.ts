@@ -4,7 +4,6 @@ import { Observable } from 'rxjs';
 import { Role } from '../enum/role.enum';
 import { Request } from 'express';
 import { User } from '@/modules/user/entities/user.entity';
-import { Admin } from '@/modules/admin/entities/admin.entity';
 import { ROLES_KEY } from '../constants/role.constant';
 
 @Injectable()
@@ -19,12 +18,8 @@ export class RolesGuard implements CanActivate {
     ]);
 
     if (!requiredRoles) return true;
-    const req = context
-      .switchToHttp()
-      .getRequest<Request & { user: User & Admin }>();
+    const req = context.switchToHttp().getRequest<Request & { user: User }>();
     const user = req.user;
-
-    console.log('guard user', user);
 
     const role = user.role;
 

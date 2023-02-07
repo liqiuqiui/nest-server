@@ -7,7 +7,7 @@ import { CreateNoticeDto } from './dto/create-notice.dto';
 import { UpdateNoticeDto } from './dto/update-notice.dto';
 import { Notice } from './entities/notice.entity';
 import { Request } from 'express';
-import { Admin } from '../admin/entities/admin.entity';
+// import { Admin } from '../admin/entities/admin.entity';
 import { User } from '../user/entities/user.entity';
 
 @Injectable()
@@ -16,7 +16,7 @@ export class NoticeService {
     @InjectRepository(Notice)
     private readonly noticeRepository: Repository<Notice>,
     @Inject(REQUEST)
-    private readonly req: Request & { user: User & Admin },
+    private readonly req: Request & { user: User },
   ) {}
 
   create(createNoticeDto: CreateNoticeDto) {

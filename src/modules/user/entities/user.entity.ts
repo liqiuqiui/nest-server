@@ -5,20 +5,28 @@ import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import { Column, Entity, OneToMany, Unique } from 'typeorm';
 
 @Entity()
-@Unique('openid_idx', ['openid'])
+@Unique('openid_idx', ['openid', 'id'])
 export class User extends Base {
-  @Column({ comment: '微信开放平台的openid' })
+  @Column({ comment: '微信开放平台的openid', nullable: true })
   openid: string;
 
-  @Column({ comment: '用户昵称' })
+  @Column({ comment: '用户昵称', nullable: true })
   nickname: string;
 
-  @Column({ comment: '用户头像' })
+  @Column({ comment: '用户头像', nullable: true })
   avatarUrl: string;
 
   @ApiProperty({ nullable: true })
   @Column({ nullable: true, comment: '用户手机号' })
   phone: string;
+
+  @ApiProperty({ description: '仅管理员有效', nullable: true })
+  @Column({ comment: '账户名(仅管理员)', nullable: true })
+  username: string | null;
+
+  @ApiProperty({ description: '仅管理员有效', nullable: true })
+  @Column({ comment: '账户密码(仅管理员)', nullable: true })
+  password: string | null;
 
   @ApiProperty({ nullable: true })
   @Column({ nullable: true, comment: '用户姓名' })
@@ -29,7 +37,7 @@ export class User extends Base {
   role: number;
 
   @ApiHideProperty()
-  @OneToMany(() => Order, order => order.user)
+  @OneToMany(() => Order, order => [order.user, order.repairman])
   orders: Order[];
 
   @ApiHideProperty()
