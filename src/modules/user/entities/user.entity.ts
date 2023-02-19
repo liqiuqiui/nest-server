@@ -36,7 +36,6 @@ export class User extends Base {
   @Column({ default: 1, comment: '用户角色' })
   role: number;
 
-  @ApiHideProperty()
   @OneToMany(() => Order, order => [order.user, order.repairman])
   orders: Order[];
 

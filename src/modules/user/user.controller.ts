@@ -15,10 +15,10 @@ import {
   ApiBadRequestResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 import { Role } from '@/common/enum/role.enum';
 import { User } from './entities/user.entity';
 import {
@@ -32,23 +32,25 @@ import {
 import { SwitchRoleDto } from './dto/switch-role.dto';
 import { UserLoginDto } from './dto/user-login.dto';
 import { AdminLoginDto } from './dto/admin-login.dto';
+import { QueryUserDto } from './dto/query-user.dto';
 
 @ApiUnauthorizedResponse()
 @ApiForbiddenResponse()
-@ApiTags('用户')
+@ApiTags('user')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @ApiPaginatedResponse(User)
-  @ApiOperation({ summary: '分页查询用户' })
+  @ApiOperation({ summary: '分页查询用户', operationId: 'getAllUser' })
+  @ApiQuery({ required: false })
   @Auth(Role.Admin)
   @Get('')
-  findAll(@Query() paginationQueryDto: PaginationQueryDto) {
-    return this.userService.findAll(paginationQueryDto);
+  findAll(@Query() queryUserDto: QueryUserDto) {
+    return this.userService.findAll(queryUserDto);
   }
 
-  @ApiOperation({ summary: '用户登陆' })
+  @ApiOperation({ summary: '用户登陆', operationId: 'userLogin' })
   @ApiOkResponse({
     schema: {
       title: `ResponseOfAdminLogin`,
@@ -57,10 +59,10 @@ export class UserController {
         code: { type: 'number', default: 200 },
         message: { type: 'string', default: 'success' },
         data: {
-          required: ['token', 'admin'],
+          required: ['token', 'userInfo'],
           properties: {
             token: { type: 'string' },
-            admin: {
+            userInfo: {
               $ref: getSchemaPath(User),
             },
           },
@@ -74,7 +76,7 @@ export class UserController {
     return this.userService.login(userLoginDto);
   }
 
-  @ApiOperation({ summary: '管理员登陆' })
+  @ApiOperation({ summary: '管理员登陆', operationId: 'adminLogin' })
   @ApiOkResponse({
     schema: {
       title: `ResponseOfAdminLogin`,
@@ -83,10 +85,10 @@ export class UserController {
         code: { type: 'number', default: 200 },
         message: { type: 'string', default: 'success' },
         data: {
-          required: ['token', 'admin'],
+          required: ['token', 'userInfo'],
           properties: {
             token: { type: 'string' },
-            admin: {
+            userInfo: {
               $ref: getSchemaPath(User),
             },
           },
@@ -102,8 +104,8 @@ export class UserController {
   }
 
   @ApiResponse(User)
-  @ApiOperation({ summary: '更新账户信息' })
-  @Auth(Role.User, Role.Repairman)
+  @ApiOperation({ summary: '更新账户信息', operationId: 'updateUserInfo' })
+  @Auth()
   // @Patch('')
   @Put('')
   update(@Body() updateUserDto: UpdateUserDto) {
@@ -112,7 +114,7 @@ export class UserController {
 
   @ApiBadRequestResponse()
   @ApiResponse(User)
-  @ApiOperation({ summary: '角色转换' })
+  @ApiOperation({ summary: '角色转换', operationId: 'switchRole' })
   @Patch('/switchRole')
   @Put('/switchRole')
   @Auth(Role.Admin)

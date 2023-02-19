@@ -4,5 +4,5 @@ import { IntersectionType, PickType } from '@nestjs/swagger';
 
 export class QueryFeedbackDto extends IntersectionType(
   PaginationQueryDto,
-  PickType(QueryDto, ['feedbackState']),
+  PickType(QueryDto, ['feedbackState', 'startTime', 'endTime', 'name', 'desc']),
 ) {}

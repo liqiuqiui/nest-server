@@ -8,11 +8,11 @@ import { ConfigService } from '@nestjs/config';
 import { AllExceptionFilter } from './common/filters/all-exception.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { cors: true });
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // 参数开启白名单
-      forbidNonWhitelisted: true, // 禁止白名单以外的参数传进来
+      // whitelist: true, // 参数开启白名单
+      // forbidNonWhitelisted: true, // 禁止白名单以外的参数传进来
       transform: true, //将参数自动转换成对应的类的实例
       transformOptions: {
         enableImplicitConversion: true, //启用隐式类型转换，dto中就不需要@Type装饰器了，'1' => 1

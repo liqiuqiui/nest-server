@@ -20,10 +20,8 @@ export class Base {
   })
   updatedTime: Date;
 
-  @ApiHideProperty()
   @DeleteDateColumn({
     comment: '删除时间',
-    select: false,
   })
   deletedTime: Date;
 }

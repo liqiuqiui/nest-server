@@ -51,10 +51,23 @@ export class OrderService {
   }
 
   async findAll(queryOrderDto: QueryOrderDto) {
-    const { page, pageSize, name, orderState } = queryOrderDto;
+    const {
+      page,
+      pageSize,
+      name,
+      state,
+      orderNo,
+      startTime,
+      endTime,
+      urgentLevel,
+    } = queryOrderDto;
+
+    console.log('queryOrderDto', queryOrderDto);
+
     let list: Order[] = [],
       totalCount: number = 0;
     const user = this.req.user as User;
+
     const builder = this.orderRepository
       .createQueryBuilder('order')
       .leftJoinAndSelect(
@@ -82,10 +95,26 @@ export class OrderService {
       });
     }
 
-    if (name) builder.andWhere('user.name like :name', { name: `%${name}%` });
+    if (typeof urgentLevel === 'number') {
+      builder.andWhere('order.urgentLevel = :urgentLevel', { urgentLevel });
+    }
 
-    if (typeof orderState === 'number')
-      builder.andWhere('order.state=:orderState', { orderState });
+    if (startTime)
+      builder.andWhere('order.createdTime >=:startTime', { startTime });
+
+    if (endTime) {
+      endTime.setDate(endTime.getDate() + 1);
+      builder.andWhere('order.createdTime <=:endTime', { endTime });
+    }
+
+    if (orderNo)
+      builder.andWhere('order.orderNo like :orderNo', {
+        orderNo: `%${orderNo}%`,
+      });
+
+    if (name) builder.andWhere('order.name like :name', { name: `%${name}%` });
+
+    if (state > -1) builder.andWhere('order.state=:state', { state });
 
     [list = [], totalCount = 0] = await builder
       .orderBy('order.id', 'DESC')
@@ -126,6 +155,7 @@ export class OrderService {
         },
       )
       .leftJoinAndSelect('order.repairman', 'repairman')
+      .leftJoinAndSelect('order.user', 'user')
       .printSql()
       .getOne();
 

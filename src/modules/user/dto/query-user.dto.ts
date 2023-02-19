@@ -2,14 +2,16 @@ import { PaginationQueryDto } from '@/common/dto/pagination-query.dto';
 import { QueryDto } from '@/common/dto/query.dto';
 import { IntersectionType, PickType } from '@nestjs/swagger';
 
-export class QueryOrderDto extends IntersectionType(
+export class QueryUserDto extends IntersectionType(
   PaginationQueryDto,
   PickType(QueryDto, [
-    'orderNo',
-    'state',
     'name',
-    'startTime',
+    'role',
+    'state',
+    'relateOrder',
     'endTime',
-    'urgentLevel',
+    'startTime',
+    'nickname',
+    'phone',
   ]),
 ) {}

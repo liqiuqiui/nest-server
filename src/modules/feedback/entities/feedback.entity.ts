@@ -28,3 +28,4 @@ export class Feedback extends Base {
   })
   user: User;
 }
+

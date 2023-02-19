@@ -9,6 +9,7 @@ import { Notice } from './entities/notice.entity';
 import { Request } from 'express';
 // import { Admin } from '../admin/entities/admin.entity';
 import { User } from '../user/entities/user.entity';
+import { QueryNoticeDto } from './dto/qeury-notice.dto';
 
 @Injectable()
 export class NoticeService {
@@ -24,11 +25,15 @@ export class NoticeService {
     return this.noticeRepository.save(notice);
   }
 
-  async findAll(paginationQueryDto: PaginationQueryDto) {
-    const { page, pageSize } = paginationQueryDto;
+  async findAll(queryNoticeDto: QueryNoticeDto) {
+    const { page, pageSize, withDeleted } = queryNoticeDto;
     const [list, totalCount] = await this.noticeRepository.findAndCount({
+      withDeleted: !!withDeleted,
       skip: pageSize * (page - 1),
       take: pageSize,
+      order: {
+        id: 'desc',
+      },
     });
     const totalPage = Math.ceil(totalCount / pageSize);
     return {
@@ -65,8 +70,14 @@ export class NoticeService {
 
     return this.noticeRepository.softRemove(notice);
   }
+  async recover(id: number) {
+    const notice = await this.noticeRepository.findOne({
+      where: { id },
+      withDeleted: true,
+    });
 
-  test() {
-    return this.req.user;
+    if (!notice) throw new NotFoundException(`notice #id=${id} not found`);
+
+    return this.noticeRepository.recover(notice);
   }
 }

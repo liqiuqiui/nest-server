@@ -34,12 +34,15 @@ import {
 
 @ApiBearerAuth()
 @ApiUnauthorizedResponse()
-@ApiTags('订单')
+@ApiTags('order')
 @Controller('order')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  @ApiOperation({ summary: '创建一个报修订单(仅用户)' })
+  @ApiOperation({
+    summary: '创建一个报修订单(仅用户)',
+    operationId: 'createOrder',
+  })
   @ApiResponse(Order, HttpStatus.CREATED)
   @ApiForbiddenResponse()
   @Auth(Role.User)
@@ -49,14 +52,14 @@ export class OrderController {
   }
 
   @ApiPaginatedResponse(Order)
-  @ApiOperation({ summary: '分页查询报修订单' })
+  @ApiOperation({ summary: '分页查询报修订单', operationId: 'getAllOrder' })
   @Auth()
   @Get()
   findAll(@Query() queryOrderDto: QueryOrderDto) {
     return this.orderService.findAll(queryOrderDto);
   }
 
-  @ApiOperation({ summary: '根据id查询订单' })
+  @ApiOperation({ summary: '根据id查询订单', operationId: 'getOrderById' })
   @ApiNotFoundResponse()
   @ApiResponse(Order)
   @Get(':orderId')
@@ -65,22 +68,22 @@ export class OrderController {
     return this.orderService.findOne(id);
   }
 
-  @ApiOperation({ summary: '更新订单信息(管理员)' })
-  @ApiForbiddenResponse()
-  @ApiNotFoundResponse()
-  @ApiResponse(Order)
-  @Put(':orderId')
-  @Patch(':orderId')
-  update(
-    @Param('orderId', ParsePositiveIntPipe)
-    id: number,
-    @Body()
-    updateOrderDto: UpdateOrderDto,
-  ) {
-    return this.orderService.update(id, updateOrderDto);
-  }
+  // @ApiOperation({ summary: '更新订单信息(管理员)' })
+  // @ApiForbiddenResponse()
+  // @ApiNotFoundResponse()
+  // @ApiResponse(Order)
+  // @Put(':orderId')
+  // @Patch(':orderId')
+  // update(
+  //   @Param('orderId', ParsePositiveIntPipe)
+  //   id: number,
+  //   @Body()
+  //   updateOrderDto: UpdateOrderDto,
+  // ) {
+  //   return this.orderService.update(id, updateOrderDto);
+  // }
 
-  @ApiOperation({ summary: '审核订单(管理员)' })
+  @ApiOperation({ summary: '审核订单(管理员)', operationId: 'processOrder' })
   @ApiResponse(Order)
   @ApiForbiddenResponse()
   @ApiNotFoundResponse()
@@ -96,7 +99,7 @@ export class OrderController {
     return this.orderService.process(id, processOrderDto);
   }
 
-  @ApiOperation({ summary: '评论订单(用户)' })
+  @ApiOperation({ summary: '评论订单(用户)', operationId: 'commentOrder' })
   @ApiForbiddenResponse()
   @ApiNotFoundResponse()
   @ApiResponse(Order)
@@ -113,7 +116,7 @@ export class OrderController {
     return this.orderService.comment(id, commentOrderDto);
   }
 
-  @ApiOperation({ summary: '分配订单(管理员)' })
+  @ApiOperation({ summary: '分配订单(管理员)', operationId: 'assignOrder' })
   @ApiForbiddenResponse()
   @ApiNotFoundResponse()
   @ApiResponse(Order)
@@ -127,7 +130,7 @@ export class OrderController {
     return this.orderService.assign(id, assignOrderDto);
   }
 
-  @ApiOperation({ summary: '完成订单(维修工)' })
+  @ApiOperation({ summary: '完成订单(维修工)', operationId: 'finishOrder' })
   @ApiForbiddenResponse()
   @ApiNotFoundResponse()
   @ApiResponse(Order)
@@ -141,7 +144,7 @@ export class OrderController {
     return this.orderService.finish(id, finishOrderDto);
   }
 
-  @ApiOperation({ summary: '删除订单(用户)' })
+  @ApiOperation({ summary: '删除订单(用户)', operationId: 'deleteOrder' })
   @ApiForbiddenResponse()
   @ApiNotFoundResponse()
   @ApiResponse(Order)

@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { TreeRepository } from 'typeorm';
+import { In, TreeRepository } from 'typeorm';
 import { CreateAddressDto } from './dto/create-address.dto';
+import { QueryAddressDto } from './dto/query-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
 import { Address } from './entities/address.entity';
 
@@ -37,16 +38,62 @@ export class AddressService {
     return this.addressRepository.save(address);
   }
 
-  findAll() {
+  findTrees() {
     return this.addressRepository.findTrees();
+  }
+
+  async findAll(queryAddressDto: QueryAddressDto) {
+    const { parentId, page, pageSize, level, name, withDeleted } =
+      queryAddressDto;
+
+    const builder = this.addressRepository
+      .createQueryBuilder('address')
+      .leftJoinAndSelect('address.parent', 'parent');
+
+    if (parentId) {
+      const parent = await this.addressRepository.findOneBy({ id: parentId });
+
+      if (!parent)
+        throw new NotFoundException(`parent address #id=${parentId} not found`);
+
+      builder.andWhere('address.parentId=:parentId', { parentId });
+    }
+
+    if (name)
+      builder.andWhere('address.name like :name', { name: `%${name}%` });
+
+    if (level) builder.andWhere('address.level=:level', { level });
+
+    if (withDeleted) builder.withDeleted();
+
+    const [list = [], totalCount = 0] = await builder
+      .take(pageSize)
+      .skip(pageSize * (page - 1))
+      .printSql()
+      .getManyAndCount();
+
+    const totalPage = Math.ceil(totalCount / pageSize) ?? 0;
+
+    return {
+      list,
+      pagination: {
+        totalCount,
+        totalPage,
+        currentPage: page,
+        pageSize,
+      },
+    };
   }
 
   async update(id: number, updateAddressDto: UpdateAddressDto) {
     let parent: Address;
 
     if (updateAddressDto.parentId > 0) {
-      parent = await this.addressRepository.preload({
-        id: updateAddressDto.parentId,
+      parent = await this.addressRepository.findOne({
+        withDeleted: true,
+        where: {
+          id: updateAddressDto.parentId,
+        },
       });
 
       if (!parent)
@@ -55,15 +102,43 @@ export class AddressService {
         );
     }
 
-    const address = await this.addressRepository.findOneBy({ id });
+    const address = await this.addressRepository.findOne({
+      withDeleted: true,
+      where: { id },
+    });
 
     if (!address)
       throw new NotFoundException(`to be updated address #id=${id} not found`);
 
-    return this.addressRepository.save({ ...address, parent });
+    return this.addressRepository.save({
+      ...address,
+      name: updateAddressDto.name,
+      parent,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} address`;
+  async remove(id: number) {
+    const address = await this.addressRepository.findOneBy({ id });
+
+    if (!address)
+      throw new NotFoundException(`parent address #id=${id} not found`);
+    const children = await this.addressRepository.findDescendants(address);
+    const childrenIdList = children.map(v => v.id);
+    const deleteRes = this.addressRepository.softDelete({
+      id: In(childrenIdList),
+    });
+
+    return deleteRes;
+  }
+
+  async recover(id: number) {
+    const address = await this.addressRepository.findOne({
+      withDeleted: true,
+      where: { id },
+    });
+
+    if (!address)
+      throw new NotFoundException(`parent address #id=${id} not found`);
+    return this.addressRepository.recover(address);
   }
 }

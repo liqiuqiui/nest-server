@@ -1,10 +1,13 @@
 import { FeedbackState } from '@/common/constants/feedback.constant';
 import { ImageType } from '@/common/constants/image.constant';
 import { Image } from '@/common/entities/image.entity';
+import { Role } from '@/common/enum/role.enum';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Phrase } from '../phrase/entities/phrase.entity';
+import { PhraseService } from '../phrase/phrase.service';
 import { User } from '../user/entities/user.entity';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { ProcessFeedbackDto } from './dto/procecc-feedback.dto';
@@ -18,6 +21,7 @@ export class FeedbackService {
     private readonly feedbackRepository: Repository<Feedback>,
     @InjectRepository(Image)
     private readonly imageRepository: Repository<Image>,
+    private readonly phraseService: PhraseService,
     @Inject(REQUEST)
     private readonly req: Request & { user: User },
   ) {}
@@ -40,18 +44,42 @@ export class FeedbackService {
   }
 
   async findAll(queryFeedbackDto: QueryFeedbackDto) {
-    const { page, pageSize, feedbackState } = queryFeedbackDto;
-    const builder = await this.feedbackRepository
+    const user = this.req.user as User;
+    const { page, pageSize, feedbackState, startTime, endTime, name, desc } =
+      queryFeedbackDto;
+
+    const builder = this.feedbackRepository
       .createQueryBuilder('feedback')
       .leftJoinAndSelect('feedback.images', 'image', 'image.type=:imageType', {
         imageType: ImageType.Feedback,
       })
-      .leftJoinAndSelect('feedback.user', 'user')
-      .where('feedback.userId=:userId', { userId: this.req.user.id });
+      .leftJoinAndSelect('feedback.user', 'user');
 
-    if (feedbackState !== undefined) {
+    // 非管理员角色查询自己的反馈，管理员查询全部反馈
+    if (user.role !== Role.Admin)
+      builder.andWhere('feedback.userId=:userId', { userId: user.id });
+
+    // 按反馈状态筛选
+    if (feedbackState !== undefined)
       builder.andWhere('feedback.state=:feedbackState', { feedbackState });
+
+    // 按照反馈时间筛选
+    if (startTime)
+      builder.andWhere('feedback.createdTime >= :startTime', { startTime });
+
+    if (endTime) {
+      endTime.setDate(endTime.getDate() + 1);
+      builder.andWhere('feedback.createdTime <= :endTime', { endTime });
     }
+
+    // 按反馈人姓名筛选
+    if (name)
+      builder.andWhere('feedback.name like :name', { name: `%${name}%` });
+
+    // 按反馈信息筛选
+    if (desc)
+      builder.andWhere('feedback.desc like :desc', { desc: `%${desc}%` });
+
     const [list = [], totalCount = 0] = await builder
       .skip(pageSize * (page - 1))
       .take(pageSize)
@@ -79,15 +107,19 @@ export class FeedbackService {
   }
 
   async process(id: number, processFeedbackDto: ProcessFeedbackDto) {
-    console.log('------------------------', id);
-
+    const { reply, phraseId } = processFeedbackDto;
     const feedback = await this.feedbackRepository.findOneBy({ id });
-    console.log(feedback);
 
     if (!feedback) throw new NotFoundException(`feedback #id=${id} not found`);
+    let phrase: Phrase;
+    if (phraseId > 0) {
+      await this.phraseService.increment(phraseId);
+      phrase = await this.phraseService.findOne(phraseId);
+    }
+
     return this.feedbackRepository.save({
       ...feedback,
-      ...processFeedbackDto,
+      reply: reply ?? phrase.text,
       state: FeedbackState.resolve,
     });
   }

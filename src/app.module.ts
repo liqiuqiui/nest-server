@@ -15,6 +15,7 @@ import * as Joi from 'joi';
 import { AppService } from './app.service';
 import { User } from './modules/user/entities/user.entity';
 import { AppController } from './app.controller';
+import { PhraseModule } from './modules/phrase/phrase.module';
 
 @Module({
   imports: [
@@ -53,8 +54,9 @@ import { AppController } from './app.controller';
     AddressModule,
     UploadModule,
     FeedbackModule,
+    PhraseModule,
   ],
-  controllers: [AppController],
+  // controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}

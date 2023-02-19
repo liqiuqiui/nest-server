@@ -1,6 +1,11 @@
-import { IsString } from 'class-validator';
+import { IsOptional, IsPositive, IsString } from 'class-validator';
 
 export class ProcessFeedbackDto {
   @IsString()
-  reply: string;
+  @IsOptional()
+  reply?: string;
+
+  @IsPositive()
+  @IsOptional()
+  phraseId?: number;
 }
