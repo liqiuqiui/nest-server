@@ -1,6 +1,14 @@
 import { Base } from '@/common/entities/base.entity';
+import { Order } from '@/modules/order/entities/order.entity';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Column, Entity, Tree, TreeChildren, TreeParent } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  Tree,
+  TreeChildren,
+  TreeParent,
+} from 'typeorm';
 
 @Entity()
 @Tree('materialized-path')
@@ -17,5 +25,7 @@ export class Address extends Base {
   @ApiPropertyOptional()
   @TreeChildren()
   children: Address[];
-}
 
+  @OneToMany(() => Order, order => order.address)
+  order: Order[];
+}

@@ -37,9 +37,16 @@ export class AddressService {
 
     return this.addressRepository.save(address);
   }
+  async findOne(id: number) {
+    const address = await this.addressRepository.findOneBy({ id });
+    if (!address) throw new NotFoundException(`address #id=${id} not found`);
+    return address;
+  }
 
-  findTrees() {
-    return this.addressRepository.findTrees();
+  async findAncestors(id: number) {
+    const address = await this.addressRepository.findOneBy({ id });
+    if (!address) throw new NotFoundException(`address #id=${id} not found`);
+    return this.addressRepository.findAncestors(address);
   }
 
   async findAll(queryAddressDto: QueryAddressDto) {

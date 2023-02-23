@@ -1,9 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsDate,
+  IsInt,
   IsMobilePhone,
   IsNumber,
   IsOptional,
+  IsPositive,
   IsString,
   IsUrl,
 } from 'class-validator';
@@ -23,9 +25,10 @@ export class CreateOrderDto {
   @IsString()
   readonly desc: string;
 
-  @ApiProperty({ description: '报修地址' })
-  @IsString()
-  readonly address: string;
+  @ApiProperty({ description: '第三级报修地址Id' })
+  @IsPositive()
+  @IsInt()
+  readonly addressId: number;
 
   @ApiProperty({ description: '维修的紧急等级' })
   @IsNumber()

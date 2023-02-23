@@ -2,7 +2,6 @@ import {
   ApiForbiddenResponse,
   ApiPaginatedResponse,
   ApiResponse,
-  ApiResponseArray,
   ApiUnauthorizedResponse,
 } from '@/common/decorators';
 import { ParsePositiveIntPipe } from '@/common/pipe/parse-positive-int.pipe';
@@ -15,10 +14,9 @@ import {
   Param,
   Delete,
   HttpStatus,
-  Put,
   Query,
 } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { AddressService } from './address.service';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { QueryAddressDto } from './dto/query-address.dto';
@@ -39,14 +37,6 @@ export class AddressController {
   create(@Body() createAddressDto: CreateAddressDto) {
     return this.addressService.create(createAddressDto);
   }
-
-  // @Auth()
-  // @ApiOperation({ summary: '查询所有地址', operationId: 'getAllAddressTree' })
-  // @ApiResponseArray(Address)
-  // @Get('tree')
-  // findTrees() {
-  //   return this.addressService.findTrees();
-  // }
 
   @ApiOperation({
     summary: '根据父级id查询所有节点',

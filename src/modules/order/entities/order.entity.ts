@@ -1,5 +1,6 @@
 import { Base } from '@/common/entities/base.entity';
 import { Image } from '@/common/entities/image.entity';
+import { Address } from '@/modules/address/entities/address.entity';
 import { User } from '@/modules/user/entities/user.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Column, Entity, Generated, ManyToOne, OneToMany } from 'typeorm';
@@ -19,8 +20,8 @@ export class Order extends Base {
   @Column({ comment: '报修描述' })
   desc: string;
 
-  @Column({ comment: '报修地址' })
-  address: string;
+  // @Column({ comment: '报修地址' })
+  // address: string;
 
   @Column({ type: 'tinyint', comment: '紧急等级', default: 0 })
   urgentLevel: number;
@@ -69,4 +70,10 @@ export class Order extends Base {
     createForeignKeyConstraints: false,
   })
   user: User;
+
+  @ManyToOne(() => Address, address => address.order, {
+    cascade: false,
+    createForeignKeyConstraints: false,
+  })
+  address: Address[];
 }

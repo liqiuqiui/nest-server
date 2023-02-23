@@ -1,5 +1,10 @@
 import { ImageType } from '@/common/constants/image.constant';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
@@ -16,10 +21,13 @@ import { QueryOrderDto } from './dto/query-order.dto';
 import { CommentOrderDto } from './dto/comment-order.dto';
 import { AssignOrderDto } from './dto/assign-order.dto';
 import { FinishOrderDto } from './dto/finish-order.dto';
+import { AddressService } from '../address/address.service';
+import { Address } from '../address/entities/address.entity';
 
 @Injectable()
 export class OrderService {
   constructor(
+    private readonly addressService: AddressService,
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(User)
@@ -31,6 +39,13 @@ export class OrderService {
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
+    const addressId = createOrderDto.addressId;
+    const address = await this.addressService.findOne(addressId);
+    if (address.id !== 3)
+      throw new BadRequestException(
+        `address id=[${addressId}] 不是一个三级地址`,
+      );
+
     const faultImages =
       createOrderDto.faultImages &&
       (await Promise.all(
@@ -83,7 +98,8 @@ export class OrderService {
         { finishType: ImageType.Finish },
       )
       .leftJoinAndSelect('order.repairman', 'repairman')
-      .leftJoinAndSelect('order.user', 'user');
+      .leftJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('order.address', 'address');
 
     if (user.role === Role.User) {
       builder.andWhere('order.userId = :userId', { userId: user.id });
@@ -124,6 +140,15 @@ export class OrderService {
       .getManyAndCount();
 
     const totalPage = Math.ceil(totalCount / pageSize) ?? 0;
+    list = await Promise.all(
+      list.map(async order => {
+        const address = order.address as unknown as Address;
+        console.log(address);
+
+        order.address = await this.addressService.findAncestors(address.id);
+        return order;
+      }),
+    );
 
     return {
       list,
@@ -156,9 +181,12 @@ export class OrderService {
       )
       .leftJoinAndSelect('order.repairman', 'repairman')
       .leftJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('order.address', 'address')
       .printSql()
       .getOne();
+    const address = order.address as unknown as Address;
 
+    order.address = await this.addressService.findAncestors(address.id);
     if (!order) throw new NotFoundException(`order #id=${id} not found`);
     return order;
   }
