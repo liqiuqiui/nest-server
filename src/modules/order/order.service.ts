@@ -10,7 +10,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
 import { Image } from '../../common/entities/image.entity';
 import { Order } from './entities/order.entity';
 import { Request } from 'express';
@@ -58,6 +57,7 @@ export class OrderService {
 
     const order = this.orderRepository.create({
       ...createOrderDto,
+      address: address as unknown as Address[],
       faultImages,
       user,
     });
@@ -76,8 +76,6 @@ export class OrderService {
       endTime,
       urgentLevel,
     } = queryOrderDto;
-
-    console.log('queryOrderDto', queryOrderDto);
 
     let list: Order[] = [],
       totalCount: number = 0;
@@ -143,7 +141,6 @@ export class OrderService {
     list = await Promise.all(
       list.map(async order => {
         const address = order.address as unknown as Address;
-        console.log(address);
 
         order.address = await this.addressService.findAncestors(address.id);
         return order;
@@ -189,23 +186,6 @@ export class OrderService {
     order.address = await this.addressService.findAncestors(address.id);
     if (!order) throw new NotFoundException(`order #id=${id} not found`);
     return order;
-  }
-
-  async update(id: number, updateOrderDto: UpdateOrderDto) {
-    const faultImages =
-      updateOrderDto.faultImages &&
-      (await Promise.all(
-        updateOrderDto.faultImages.map(url =>
-          this.preloadImageByUrl(url, ImageType.Fault),
-        ),
-      ));
-    const order = await this.orderRepository.preload({
-      id,
-      ...updateOrderDto,
-      faultImages,
-    });
-    if (!order) throw new NotFoundException(`order #id=${id} not found`);
-    return this.orderRepository.save(order);
   }
 
   async process(id: number, processOrderDto: ProcessOrderDto) {

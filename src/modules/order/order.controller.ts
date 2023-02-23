@@ -13,7 +13,6 @@ import {
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Order } from './entities/order.entity';
 import { ParsePositiveIntPipe } from '@/common/pipe/parse-positive-int.pipe';
@@ -67,21 +66,6 @@ export class OrderController {
   findOne(@Param('orderId', ParsePositiveIntPipe) id: number) {
     return this.orderService.findOne(id);
   }
-
-  // @ApiOperation({ summary: '更新订单信息(管理员)' })
-  // @ApiForbiddenResponse()
-  // @ApiNotFoundResponse()
-  // @ApiResponse(Order)
-  // @Put(':orderId')
-  // @Patch(':orderId')
-  // update(
-  //   @Param('orderId', ParsePositiveIntPipe)
-  //   id: number,
-  //   @Body()
-  //   updateOrderDto: UpdateOrderDto,
-  // ) {
-  //   return this.orderService.update(id, updateOrderDto);
-  // }
 
   @ApiOperation({ summary: '审核订单(管理员)', operationId: 'processOrder' })
   @ApiResponse(Order)
