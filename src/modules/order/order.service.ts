@@ -41,7 +41,7 @@ export class OrderService {
   async create(createOrderDto: CreateOrderDto) {
     const addressId = createOrderDto.addressId;
     const address = await this.addressService.findOne(addressId);
-    if (address.id !== 3)
+    if (address.level !== 3)
       throw new BadRequestException(
         `address id=[${addressId}] 不是一个三级地址`,
       );
