@@ -52,7 +52,7 @@ export class PhraseService {
 
     if (!phrase) throw new BadRequestException(`id='${id}'的短语不存在`);
 
-    return this.phraseRepository.softRemove(phrase);
+    return this.phraseRepository.remove(phrase);
   }
 
   private async exist(text: string) {
