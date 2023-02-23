@@ -13,5 +13,12 @@ export class QueryUserDto extends IntersectionType(
     'startTime',
     'nickname',
     'phone',
+    'registerState',
+    'userNo',
+    'academyName',
+    'majorNo',
+    'majorName',
+    'classNo',
+    'className',
   ]),
 ) {}

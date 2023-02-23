@@ -36,6 +36,37 @@ export class User extends Base {
   @Column({ default: 1, comment: '用户角色' })
   role: number;
 
+  // @ApiProperty({ description: '学院编号（仅学生用户）', nullable: true })
+  // @Column({ comment: '学院编号（仅学生用户）', nullable: true })
+  // academyNo: string;
+
+  @ApiProperty({ description: '学院名称（仅学生用户）', nullable: true })
+  @Column({ comment: '学院名称（仅学生用户）', nullable: true })
+  academyName: string;
+
+  @ApiProperty({ description: '专业名称（仅学生用户）', nullable: true })
+  @Column({ comment: '专业名称（仅学生用户）', nullable: true })
+  majorName: string;
+  @ApiProperty({ description: '专业编号（仅学生用户）', nullable: true })
+  @Column({ comment: '专业编号（仅学生用户）', nullable: true })
+  majorNo: string;
+
+  @ApiProperty({ description: '班级编号（仅学生用户）', nullable: true })
+  @Column({ comment: '班级编号（仅学生用户）', nullable: true })
+  classNo: string;
+
+  @ApiProperty({ description: '班级名称（仅学生用户）', nullable: true })
+  @Column({ comment: '班级名称（仅学生用户）', nullable: true })
+  className: string;
+
+  @ApiProperty({ description: '学/工号（非管理员）', nullable: true })
+  @Column({ comment: '学/工号（非管理员）', nullable: true })
+  userNo: string;
+
+  @ApiProperty({ description: '注册状态' })
+  @Column({ comment: '注册状态', default: 0 })
+  registerState: number;
+
   @OneToMany(() => Order, order => [order.user, order.repairman])
   orders: Order[];
 

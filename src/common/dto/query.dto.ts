@@ -5,8 +5,7 @@ import {
   IsEnum,
   IsIn,
   IsInt,
-  IsMobilePhone,
-  isNumber,
+  IsNumber,
   IsOptional,
   IsPositive,
   IsString,
@@ -110,4 +109,39 @@ export class QueryDto {
   @IsIn([1, 2, 3])
   @IsOptional()
   level?: number;
+
+  @ApiPropertyOptional({ description: '用户注册状态' })
+  @IsNumber()
+  @IsOptional()
+  registerState?: number;
+
+  @ApiPropertyOptional({ description: '学/工号' })
+  @IsString()
+  @IsOptional()
+  userNo?: string;
+
+  @ApiPropertyOptional({ description: '学院名称' })
+  @IsString()
+  @IsOptional()
+  academyName?: string;
+
+  @ApiPropertyOptional({ description: '专业编号' })
+  @IsString()
+  @IsOptional()
+  majorNo?: string;
+
+  @ApiPropertyOptional({ description: '专业名称' })
+  @IsString()
+  @IsOptional()
+  majorName?: string;
+
+  @ApiPropertyOptional({ description: '班级编号' })
+  @IsString()
+  @IsOptional()
+  classNo?: string;
+
+  @ApiPropertyOptional({ description: '班级名称' })
+  @IsString()
+  @IsOptional()
+  className?: string;
 }
