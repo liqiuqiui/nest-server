@@ -9,8 +9,9 @@ export class AllExceptionFilter implements ExceptionFilter {
   catch(exception: Error, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
+    this.logger.log(exception?.stack);
+    this.logger.log(exception?.message);
     this.logger.log(exception);
-
     return response.status(500).send({
       code: 500,
       message: 'Internal server error',
