@@ -195,27 +195,31 @@ export class UserService {
   }
 
   async register(userRegisterDto: UserRegisterDto) {
-    console.log('userRegisterDto', userRegisterDto);
-
     const { userNo, code, avatarUrl, nickname } = userRegisterDto;
 
+    // 使用code和微信服务器换取openid
     const openid = await this.code2openid(code);
 
+    // 根据openid查询用户是否注册过
     let user = await this.userRepository.findOneBy({ openid });
 
     if (user) throw new BadRequestException('账号已注册');
 
+    // 根据学工/号查询出用户基本信息
     user = await this.userRepository.findOneBy({ userNo });
 
     if (user) throw new BadRequestException('学/工号错误');
 
+    // 调用userRepo的save方法，将用户注册信息更新进去
     user = await this.userRepository.save({
       ...user,
       openid,
       avatarUrl,
       nickname,
+      registerState: 1,
     });
 
+    // 删除多余信息
     delete user.password;
     delete user.username;
     delete user.deletedTime;
