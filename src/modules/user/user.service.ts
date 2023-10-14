@@ -288,7 +288,8 @@ export class UserService {
       sheetHead[3] !== '专业名称' ||
       sheetHead[4] !== '专业编号' ||
       sheetHead[5] !== '班级名称' ||
-      sheetHead[6] !== '班级编号'
+      sheetHead[6] !== '班级编号' ||
+      sheetHead[7] !== '联系电话'
     )
       throw new BadRequestException('excel解析失败, 请检查格式后重试');
     const userList = await Promise.all(
@@ -301,6 +302,7 @@ export class UserService {
           majorNo: user[4],
           className: user[5],
           classNo: user[6],
+          phone: user[7],
         };
         const existUser = await this.userRepository.findOneBy({
           userNo: userEntity.userNo,
